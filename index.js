@@ -177,7 +177,8 @@
     		"labelColor": "green",
     		"orgId": 936,
     		"bankaccount_info2": null
-    	}]
+    	}],
+		"searchOrganizations":[]
     }
 
     //  get headder data
@@ -193,20 +194,25 @@
     // console.log(newvar, 'dddddd');
     let searchResult = [];
 	let previouaSearch = [];
+	let orgDetail = [];
+	let prevId = '';
+	let preVal = false;
+
+	// add Header data 
+
     Object.keys(newvar).forEach(cl => {
     	newData += `<th class="header">${newvar[cl]} ${sortBtn.includes(cl)?`<button type='button' name='${cl}' onclick="arrSort('${cl}')" class='srt-btn'>sort</button>`:""}</th>`;
     })
-    trid.innerHTML = `<tr id="searchrow"></tr>`
+    thid.innerHTML += newData;
+
+    thid.innerHTML += `<tr id="searchrow"></tr>`
     let newval = document.getElementById('searchrow');
 
-    // console.log(newval, 'hshsh');
-    // console.log(searObj);
+	// add search textbox
+
     Object.keys(newvar).forEach((col, index) => {
-    	// console.log(col, 'col----');
     	const find = searObj.findIndex((element) => element === col);
 
-    	// console.log(element,'--index--');
-    	// console.log(find >= 0);
     	if (find >= 0) {
     		newval.innerHTML += `<td><input type="text" id = ${col} placeholder=${col} onkeyup="searchBox(this.value,'${col}')" /></td>`
     	} else {
@@ -215,88 +221,109 @@
 
     })
 
-    thid.innerHTML += newData;
-    // console.log(newData,'olddata')
+	data.searchOrganizations =[];
+
+
     let newuserdata = '';
     userData.forEach(ele => {
     	let addUserData = '';
-    	// console.log(ele,'elelog');
-    	Object.keys(newvar).forEach(colunmkey => {
-    		// console.log(colunmkey,'colunmkey');
-    		addUserData += `<td>${ele[colunmkey]}</td>`
-    		// console.log(addUserData,'newcolumnupdtae');
-    	});
+		addUserData = createRow(ele)
     	trid.innerHTML += `<tr class="tr-data">${addUserData}</tr>`
     });
 
-    // search function
     let trClass = document.querySelectorAll('.tr-data')
-    // console.log('tr',trClass);
+
+
+	// searching function
+
     function searchBox(value, key) {
-    	const orgData = [...userData];
+    	let orgData ;
+		// console.log(data.searchOrganizations,'ji');
 		// console.log(orgData,'op');
+		if(data.searchOrganizations.length > 0){
+			orgData = [...data.searchOrganizations]
+
+		}else{
+			orgData = [...userData];
+		}
     	const updatedData = orgData.filter((org) => {
     		if (org[key] === null) {
     			return;
     		}
+			// console.log(org)
     		return org[key].includes(value)
     	});
-    	searchResult = updatedData;
-    	// console.log('searchResult',searchResult);
-    	let tableRows = document.getElementsByClassName("tr-data");
 
-    	for (let i = 0; i < tableRows.length; i++) {
-    		const element = tableRows[i];
-    		element.style.display = searchResult.findIndex(e => e.id == element.childNodes[0].innerHTML) !== -1 ? 'table-row' : 'none'
-    	}
+    	searchResult = updatedData;
+		trid.innerHTML = '';
+		updatedData.forEach(srchcl => {
+			let searchRowData = '';
+			searchRowData = createRow(srchcl);
+			trid.innerHTML += searchRowData;
+		})
+
 		console.log('updatedData',updatedData);
 		if (updatedData.length > 0) {
+			if(data.searchOrganizations.length > 0){
+				data.searchOrganizations = []
+			} 
+
+			data.searchOrganizations.push(...updatedData)
 			previouaSearch = updatedData;
 			console.log('previouaSearch : ', previouaSearch);
 		  }
-    	// let searchData = document.getElementById(id);
-    	// var input, filter, table, tr, td, i, txtValue;
-    	// //input = document.getElementById("myInput");
-    	// filter = searchData.value.toUpperCase();
-    	// table = document.getElementById("trdata");
-    	// tr = table.getElementsByClassName("tr-data");
-    	// for (i = 0; i < tr.length; i++) {
-    	// 	td = tr[i].getElementsByTagName("td")[columnNumber];
-
-    	// 	if (td) {
-    	// 		txtValue = td.textContent || td.innerText;
-    	// 		if (txtValue.toUpperCase().indexOf(filter) > -1) {
-    	// 			tr[i].style.display = "";
-    	// 		} else {
-    	// 			tr[i].style.display = "none";
-    	// 		}
-    	// 	}
-    	// }
     }
+
+	// sorting functionality
+	
 	function arrSort(cl) {
+		if(prevId === cl){
+			preVal = !preVal
+		} else {
+			prevId = cl;
+			preVal = false;
+		}
 		const sortData = userData.sort((a, b) => {
 			let fa = (a[cl]||"").toString().toLowerCase(),
 				fb = (b[cl]||"").toString().toLowerCase();
-		
-			if (fa < fb) {
-				return -1;
+			if(!preVal){
+				return fa == fb ? 0 : fa > fb ? 1 : -1;
+				
+			} else {
+			
+				return fa == fb ? 0 : fa < fb ? 1 : -1;
 			}
-			if (fa > fb) {
-				return 1;
-			}
-			return 0;
 		});
-		// console.log('s--',sortData);
+		console.log('s--',sortData);
 		let tableRows = document.getElementsByClassName("tr-data");
-		for (let i = 0; i < tableRows.length; i++) {
-    		const element = tableRows[i];
-			element.style.display = sortData.findIndex(e => {
-
-				if((e.id == element.childNodes[0].innerHTML) !== -1) {
-					tableRows[i].innerHTML = e
-				}
-			});
-
-			console.log(element.childNodes[0],'el');
-		}
+		trid.innerHTML = '';
+		sortData.forEach(sort => {
+			let sortedData = createRow(sort);
+			// console.log(sortedData,'ii');
+			trid.innerHTML += sortedData;
+		})
+	
 	}
+	
+	 orgDetail= userData;
+	//  console.log('orgDetail',orgDetail);
+	let tableRow = document.getElementsByClassName("tr-data");
+
+
+	// add td dynamically function
+	
+	function createRow(data) {
+
+		let rowDetail = '';
+	
+		Object.keys(newvar).forEach(item => {
+
+			rowDetail += `<td>${data[item]}</td>` 
+
+		});
+		
+		return rowDetail;
+	}
+
+	// console.log(createRow(orgDetail[1]), );
+	// CreatRow(orgDetail[0]);
